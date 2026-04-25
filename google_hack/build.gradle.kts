@@ -14,10 +14,9 @@ android {
     defaultConfig {
         applicationId = "com.example.google_hack"
         minSdk = 30
-        targetSdk = 36
+        targetSdk = 33
         versionCode = 1
         versionName = "1.0"
-
     }
 
     buildTypes {
@@ -54,6 +53,7 @@ dependencies {
 
     // Health Services
     implementation(libs.androidx.health.services.client)
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-guava:1.7.3")
 
     // Networking
     implementation(libs.retrofit)

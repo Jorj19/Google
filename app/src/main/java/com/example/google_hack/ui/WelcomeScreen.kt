@@ -29,19 +29,19 @@ import kotlinx.coroutines.delay
 
 @Composable
 fun WelcomeScreen(onStartClick: () -> Unit) {
-    val pagerState = rememberPagerState(pageCount = { 3 })
+    val pagerState = rememberPagerState { 3 }
 
     // Auto-roaming carousel
     LaunchedEffect(Unit) {
         while (true) {
-            delay(3000)
+            delay(timeMillis = 3000)
             val nextPage = (pagerState.currentPage + 1) % pagerState.pageCount
-            pagerState.animateScrollToPage(nextPage, animationSpec = tween(800))
+            pagerState.animateScrollToPage(nextPage, animationSpec = tween(durationMillis = 800))
         }
     }
 
     Scaffold(
-        containerColor = Color.Transparent
+        containerColor = Color.Transparent,
     ) { innerPadding ->
         Column(
             modifier = Modifier
@@ -49,7 +49,7 @@ fun WelcomeScreen(onStartClick: () -> Unit) {
                 .padding(innerPadding)
                 .padding(24.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.SpaceBetween
+            verticalArrangement = Arrangement.SpaceBetween,
         ) {
             // Header: "Discover your perfect Tempo"
             Text(
@@ -64,13 +64,13 @@ fun WelcomeScreen(onStartClick: () -> Unit) {
                 fontSize = 36.sp,
                 lineHeight = 44.sp,
                 textAlign = TextAlign.Start,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
             )
 
             // Carousel
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
                 HorizontalPager(
                     state = pagerState,
@@ -78,16 +78,16 @@ fun WelcomeScreen(onStartClick: () -> Unit) {
                         .fillMaxWidth()
                         .height(300.dp)
                         .clip(RoundedCornerShape(16.dp))
-                        .background(Color(0xFFF0F0F0))
+                        .background(Color(0xFFF0F0F0)),
                 ) { page ->
                     Box(
                         modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
+                        contentAlignment = Alignment.Center,
                     ) {
                         Text(
                             text = "Feature Illustration ${page + 1}",
                             color = Color.Gray,
-                            fontWeight = FontWeight.Medium
+                            fontWeight = FontWeight.Medium,
                         )
                     }
                 }
@@ -95,7 +95,7 @@ fun WelcomeScreen(onStartClick: () -> Unit) {
                 // Page indicators
                 Row(
                     modifier = Modifier.padding(top = 8.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
                     repeat(pagerState.pageCount) { iteration ->
                         val color = if (pagerState.currentPage == iteration) TempoBlue else Color.LightGray
@@ -103,7 +103,7 @@ fun WelcomeScreen(onStartClick: () -> Unit) {
                             modifier = Modifier
                                 .size(8.dp)
                                 .clip(CircleShape)
-                                .background(color)
+                                .background(color),
                         )
                     }
                 }
@@ -113,14 +113,14 @@ fun WelcomeScreen(onStartClick: () -> Unit) {
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(16.dp),
-                modifier = Modifier.padding(bottom = 16.dp)
+                modifier = Modifier.padding(bottom = 16.dp),
             ) {
                 Text(
                     text = "Master public speaking with real-time AI feedback and performance tracking.",
                     textAlign = TextAlign.Center,
                     fontSize = 16.sp,
                     color = Color.DarkGray,
-                    lineHeight = 22.sp
+                    lineHeight = 22.sp,
                 )
 
                 Button(
@@ -130,13 +130,13 @@ fun WelcomeScreen(onStartClick: () -> Unit) {
                         .height(60.dp),
                     shape = RoundedCornerShape(12.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = DarkBlue),
-                    elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp)
+                    elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp),
                 ) {
                     Text(
                         text = "Start Improving Your Speech",
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color.White
+                        color = Color.White,
                     )
                 }
             }
@@ -148,6 +148,6 @@ fun WelcomeScreen(onStartClick: () -> Unit) {
 @Composable
 fun WelcomeScreenPreview() {
     Google_HackTheme {
-        WelcomeScreen(onStartClick = {})
+        WelcomeScreen { }
     }
 }

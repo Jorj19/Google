@@ -18,7 +18,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -32,9 +31,8 @@ import com.example.google_hack.ui.theme.Google_HackTheme
 fun CreateSpeechScreen(onBackClick: () -> Unit, onSubmitClick: () -> Unit) {
     var title by remember { mutableStateOf("") }
     var transcriptText by remember { mutableStateOf("") }
-    var selectedFileUri by remember { mutableStateOf<Uri?>(null) }
     var selectedFileName by remember { mutableStateOf("") }
-    var useManualEntry by remember { mutableStateOf(false) }
+    var useManualEntry by remember { mutableStateOf(value = false) }
 
     var selectedLanguage by remember { mutableStateOf("English") }
     var selectedAge by remember { mutableStateOf("18+") }
@@ -50,13 +48,12 @@ fun CreateSpeechScreen(onBackClick: () -> Unit, onSubmitClick: () -> Unit) {
         focusedTextColor = Color.Black,
         unfocusedTextColor = Color.Black,
         focusedLabelColor = Color.Black,
-        unfocusedLabelColor = Color.Black.copy(alpha = 0.7f)
+        unfocusedLabelColor = Color.Black.copy(alpha = 0.7f),
     )
 
     val filePickerLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.OpenDocument()
+        contract = ActivityResultContracts.OpenDocument(),
     ) { uri: Uri? ->
-        selectedFileUri = uri
         selectedFileName = uri?.let { "Selected: ${it.path?.substringAfterLast("/")}" } ?: ""
     }
 
@@ -68,7 +65,7 @@ fun CreateSpeechScreen(onBackClick: () -> Unit, onSubmitClick: () -> Unit) {
                     Text(
                         text = "Create New Speech", 
                         fontWeight = FontWeight.Bold,
-                        color = Color.Black
+                        color = Color.Black,
                     ) 
                 },
                 navigationIcon = {
@@ -76,13 +73,13 @@ fun CreateSpeechScreen(onBackClick: () -> Unit, onSubmitClick: () -> Unit) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack, 
                             contentDescription = "Back",
-                            tint = Color.Black
+                            tint = Color.Black,
                         )
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent),
             )
-        }
+        },
     ) { innerPadding ->
         Column(
             modifier = Modifier
@@ -90,7 +87,7 @@ fun CreateSpeechScreen(onBackClick: () -> Unit, onSubmitClick: () -> Unit) {
                 .padding(innerPadding)
                 .padding(24.dp)
                 .verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.spacedBy(20.dp)
+            verticalArrangement = Arrangement.spacedBy(20.dp),
         ) {
             OutlinedTextField(
                 value = title,
@@ -99,7 +96,7 @@ fun CreateSpeechScreen(onBackClick: () -> Unit, onSubmitClick: () -> Unit) {
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp),
                 colors = textFieldColors,
-                textStyle = TextStyle(color = Color.Black)
+                textStyle = TextStyle(color = Color.Black),
             )
 
             // Transcript Section
@@ -108,7 +105,7 @@ fun CreateSpeechScreen(onBackClick: () -> Unit, onSubmitClick: () -> Unit) {
                 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
                     Button(
                         onClick = { 
@@ -117,7 +114,7 @@ fun CreateSpeechScreen(onBackClick: () -> Unit, onSubmitClick: () -> Unit) {
                         },
                         modifier = Modifier.weight(1f),
                         colors = ButtonDefaults.buttonColors(containerColor = if (!useManualEntry) DarkBlue else Color.LightGray),
-                        shape = RoundedCornerShape(8.dp)
+                        shape = RoundedCornerShape(8.dp),
                     ) {
                         Icon(Icons.Default.Info, contentDescription = null, modifier = Modifier.size(20.dp))
                         Spacer(Modifier.width(8.dp))
@@ -128,7 +125,7 @@ fun CreateSpeechScreen(onBackClick: () -> Unit, onSubmitClick: () -> Unit) {
                         onClick = { useManualEntry = true },
                         modifier = Modifier.weight(1f),
                         colors = ButtonDefaults.buttonColors(containerColor = if (useManualEntry) DarkBlue else Color.LightGray),
-                        shape = RoundedCornerShape(8.dp)
+                        shape = RoundedCornerShape(8.dp),
                     ) {
                         Text("Manual Entry")
                     }
@@ -144,18 +141,18 @@ fun CreateSpeechScreen(onBackClick: () -> Unit, onSubmitClick: () -> Unit) {
                             .height(150.dp),
                         shape = RoundedCornerShape(12.dp),
                         colors = textFieldColors,
-                        textStyle = TextStyle(color = Color.Black)
+                        textStyle = TextStyle(color = Color.Black),
                     )
                 } else if (selectedFileName.isNotEmpty()) {
                     Card(
                         modifier = Modifier.fillMaxWidth(),
                         colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.5f)),
-                        shape = RoundedCornerShape(8.dp)
+                        shape = RoundedCornerShape(8.dp),
                     ) {
                         Text(
                             text = selectedFileName,
                             modifier = Modifier.padding(16.dp),
-                            color = Color.Black
+                            color = Color.Black,
                         )
                     }
                 }
@@ -172,7 +169,7 @@ fun CreateSpeechScreen(onBackClick: () -> Unit, onSubmitClick: () -> Unit) {
                     .fillMaxWidth()
                     .height(56.dp),
                 shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = DarkBlue)
+                colors = ButtonDefaults.buttonColors(containerColor = DarkBlue),
             ) {
                 Text("Submit", fontSize = 18.sp, fontWeight = FontWeight.Bold)
             }
@@ -186,9 +183,9 @@ fun TempoDropdown(
     label: String,
     options: List<String>,
     selectedOption: String,
-    onOptionSelected: (String) -> Unit
+    onOptionSelected: (String) -> Unit,
 ) {
-    var expanded by remember { mutableStateOf(false) }
+    var expanded by remember { mutableStateOf(value = false) }
 
     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
         Text(text = label, fontWeight = FontWeight.Medium, color = Color.Black, fontSize = 14.sp)
@@ -197,12 +194,12 @@ fun TempoDropdown(
                 .fillMaxWidth()
                 .background(Color.White.copy(alpha = 0.5f), RoundedCornerShape(12.dp))
                 .clickable { expanded = true }
-                .padding(16.dp)
+                .padding(16.dp),
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(text = selectedOption, color = Color.Black)
                 Icon(Icons.Default.ArrowDropDown, contentDescription = null, tint = Color.Black)
@@ -211,7 +208,9 @@ fun TempoDropdown(
             DropdownMenu(
                 expanded = expanded,
                 onDismissRequest = { expanded = false },
-                modifier = Modifier.fillMaxWidth(0.8f).background(Color.White)
+                modifier = Modifier
+                    .fillMaxWidth(0.8f)
+                    .background(Color.White),
             ) {
                 options.forEach { option ->
                     DropdownMenuItem(
@@ -219,7 +218,7 @@ fun TempoDropdown(
                         onClick = {
                             onOptionSelected(option)
                             expanded = false
-                        }
+                        },
                     )
                 }
             }

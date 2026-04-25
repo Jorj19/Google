@@ -25,7 +25,7 @@ import com.example.google_hack.ui.theme.TempoBlue
 data class SpeechSession(
     val title: String,
     val target: String,
-    val grade: Float
+    val grade: Float,
 )
 
 @Composable
@@ -39,43 +39,43 @@ fun MainScreen(onAddSpeechClick: () -> Unit) {
                 onClick = onAddSpeechClick,
                 containerColor = DarkBlue,
                 contentColor = Color.White,
-                shape = CircleShape
+                shape = CircleShape,
             ) {
                 Icon(Icons.Default.Add, contentDescription = "Add New Speech")
             }
-        }
+        },
     ) { innerPadding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .padding(horizontal = 16.dp)
+                .padding(horizontal = 16.dp),
         ) {
             Text(
                 text = "My Speeches",
                 fontSize = 32.sp,
                 fontWeight = FontWeight.Bold,
                 color = Color.Black,
-                modifier = Modifier.padding(vertical = 24.dp)
+                modifier = Modifier.padding(vertical = 24.dp),
             )
 
             if (speeches.isEmpty()) {
                 Box(
                     modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.BottomCenter // Moved lower
+                    contentAlignment = Alignment.BottomCenter, // Moved lower
                 ) {
                     Text(
                         text = "No speeches yet.\nTap + to create your first one!",
                         textAlign = TextAlign.Center,
                         fontSize = 18.sp,
                         color = Color.Black, // Changed to black
-                        modifier = Modifier.padding(bottom = 100.dp) // Offset from bottom
+                        modifier = Modifier.padding(bottom = 100.dp), // Offset from bottom
                     )
                 }
             } else {
                 LazyColumn(
                     verticalArrangement = Arrangement.spacedBy(16.dp),
-                    contentPadding = PaddingValues(bottom = 80.dp)
+                    contentPadding = PaddingValues(bottom = 80.dp),
                 ) {
                     items(speeches) { speech ->
                         SpeechCard(speech)
@@ -92,24 +92,24 @@ fun SpeechCard(speech: SpeechSession) {
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.9f)), // Slight transparency
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
     ) {
         Column(
             modifier = Modifier
                 .padding(16.dp)
-                .fillMaxWidth()
+                .fillMaxWidth(),
         ) {
             Text(
                 text = speech.title,
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Bold,
-                color = DarkBlue
+                color = DarkBlue,
             )
             Text(
                 text = "Target: ${speech.target}",
                 fontSize = 16.sp,
                 color = Color.Gray,
-                modifier = Modifier.padding(top = 4.dp)
+                modifier = Modifier.padding(top = 4.dp),
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -117,20 +117,20 @@ fun SpeechCard(speech: SpeechSession) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
+                horizontalArrangement = Arrangement.SpaceBetween,
             ) {
                 Column(modifier = Modifier.weight(1f)) {
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(8.dp)
-                            .background(Color(0xFFE0E0E0), RoundedCornerShape(4.dp))
+                            .background(Color(0xFFE0E0E0), RoundedCornerShape(4.dp)),
                     ) {
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth(speech.grade / 10f)
                                 .height(8.dp)
-                                .background(TempoBlue, RoundedCornerShape(4.dp))
+                                .background(TempoBlue, RoundedCornerShape(4.dp)),
                         )
                     }
                     Text(
@@ -138,7 +138,7 @@ fun SpeechCard(speech: SpeechSession) {
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Medium,
                         color = DarkBlue,
-                        modifier = Modifier.padding(top = 8.dp)
+                        modifier = Modifier.padding(top = 8.dp),
                     )
                 }
             }
@@ -150,6 +150,6 @@ fun SpeechCard(speech: SpeechSession) {
 @Composable
 fun MainScreenPreview() {
     Google_HackTheme {
-        MainScreen(onAddSpeechClick = {})
+        MainScreen { }
     }
 }
