@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
@@ -11,14 +13,29 @@ android {
         }
     }
 
+    // Read the local.properties file
+    val properties = Properties()
+    val localPropertiesFile = rootProject.file("local.properties")
+    if (localPropertiesFile.exists()) {
+        properties.load(localPropertiesFile.inputStream())
+    }
+    val geminiApiKey = properties.getProperty("GEMINI_API_KEY") ?: "\"\""
+
     defaultConfig {
         applicationId = "com.example.google_hack"
         minSdk = 26
         targetSdk = 36
         versionCode = 1
         versionName = "1.0"
-
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        // Expose the key to your Kotlin code
+        buildConfigField("String", "GEMINI_API_KEY", "\"$geminiApiKey\"")
+    }
+
+    buildFeatures {
+        compose = true
+        buildConfig = true // ADD THIS to enable BuildConfig generation
     }
 
     buildTypes {
