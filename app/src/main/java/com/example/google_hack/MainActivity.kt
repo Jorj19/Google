@@ -4,14 +4,19 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.runtime.*
+import com.example.google_hack.ui.BackgroundWrapper
+import com.example.google_hack.ui.CreateSpeechScreen
+import com.example.google_hack.ui.MainScreen
+import com.example.google_hack.ui.WelcomeScreen
 import com.example.google_hack.ui.theme.Google_HackTheme
+import kotlinx.coroutines.delay
+
+enum class Screen {
+    Welcome,
+    Main,
+    CreateSpeech
+}
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -19,29 +24,42 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             Google_HackTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "Android",
-                        modifier = Modifier.padding(innerPadding)
-                    )
+                var currentScreen by remember { mutableStateOf(Screen.Welcome) }
+                var nextScreen by remember { mutableStateOf<Screen?>(null) }
+                var isTransitioning by remember { mutableStateOf(false) }
+                
+                // Navigation Coroutine for Animation
+                LaunchedEffect(nextScreen) {
+                    nextScreen?.let { target ->
+                        isTransitioning = true
+                        delay(1000) // Match BackgroundWrapper animation duration
+                        currentScreen = target
+                        isTransitioning = false
+                        nextScreen = null
+                    }
+                }
+
+                BackgroundWrapper(isTransitioning = isTransitioning) {
+                    when (currentScreen) {
+                        Screen.Welcome -> {
+                            WelcomeScreen(
+                                onStartClick = { nextScreen = Screen.Main }
+                            )
+                        }
+                        Screen.Main -> {
+                            MainScreen(
+                                onAddSpeechClick = { currentScreen = Screen.CreateSpeech }
+                            )
+                        }
+                        Screen.CreateSpeech -> {
+                            CreateSpeechScreen(
+                                onBackClick = { currentScreen = Screen.Main },
+                                onSubmitClick = { currentScreen = Screen.Main }
+                            )
+                        }
+                    }
                 }
             }
         }
-    }
-}
-
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    Google_HackTheme {
-        Greeting("Android")
     }
 }
