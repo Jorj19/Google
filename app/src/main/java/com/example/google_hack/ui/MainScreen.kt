@@ -1,6 +1,7 @@
 package com.example.google_hack.ui
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -10,6 +11,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -18,19 +21,21 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.google_hack.data.models.Project
+import com.example.google_hack.presentation.home.HomeViewModel
 import com.example.google_hack.ui.theme.DarkBlue
 import com.example.google_hack.ui.theme.Google_HackTheme
 import com.example.google_hack.ui.theme.TempoBlue
-
-data class SpeechSession(
-    val title: String,
-    val target: String,
-    val grade: Float,
-)
+import com.example.google_hack.util.Resource
 
 @Composable
-fun MainScreen(onAddSpeechClick: () -> Unit) {
-    val speeches = emptyList<SpeechSession>() // No speeches for now
+fun MainScreen(
+    homeViewModel: HomeViewModel,
+    onAddSpeechClick: () -> Unit,
+    onSpeechClick: (Project) -> Unit
+) {
+    val projectsState by homeViewModel.projectsState.collectAsState()
 
     Scaffold(
         containerColor = Color.Transparent,
@@ -59,26 +64,43 @@ fun MainScreen(onAddSpeechClick: () -> Unit) {
                 modifier = Modifier.padding(vertical = 24.dp),
             )
 
-            if (speeches.isEmpty()) {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.BottomCenter, // Moved lower
-                ) {
-                    Text(
-                        text = "No speeches yet.\nTap + to create your first one!",
-                        textAlign = TextAlign.Center,
-                        fontSize = 18.sp,
-                        color = Color.Black, // Changed to black
-                        modifier = Modifier.padding(bottom = 100.dp), // Offset from bottom
+            when (val resource = projectsState) {
+                is Resource.Loading -> {
+                    // Show a subtle progress bar at the top instead of full screen spinner
+                    LinearProgressIndicator(
+                        modifier = Modifier.fillMaxWidth().height(2.dp),
+                        color = DarkBlue
                     )
                 }
-            } else {
-                LazyColumn(
-                    verticalArrangement = Arrangement.spacedBy(16.dp),
-                    contentPadding = PaddingValues(bottom = 80.dp),
-                ) {
-                    items(speeches) { speech ->
-                        SpeechCard(speech)
+                is Resource.Success -> {
+                    val projects = resource.data
+                    if (projects.isEmpty()) {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.BottomCenter,
+                        ) {
+                            Text(
+                                text = "No speeches yet.\nTap + to create your first one!",
+                                textAlign = TextAlign.Center,
+                                fontSize = 18.sp,
+                                color = Color.Black,
+                                modifier = Modifier.padding(bottom = 100.dp),
+                            )
+                        }
+                    } else {
+                        LazyColumn(
+                            verticalArrangement = Arrangement.spacedBy(16.dp),
+                            contentPadding = PaddingValues(bottom = 80.dp),
+                        ) {
+                            items(projects) { project ->
+                                SpeechCard(project, onClick = { onSpeechClick(project) })
+                            }
+                        }
+                    }
+                }
+                is Resource.Error -> {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Text(text = resource.message, color = Color.Red)
                     }
                 }
             }
@@ -87,11 +109,11 @@ fun MainScreen(onAddSpeechClick: () -> Unit) {
 }
 
 @Composable
-fun SpeechCard(speech: SpeechSession) {
+fun SpeechCard(project: Project, onClick: () -> Unit) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth().clickable { onClick() },
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.9f)), // Slight transparency
+        colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.9f)),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
     ) {
         Column(
@@ -100,14 +122,14 @@ fun SpeechCard(speech: SpeechSession) {
                 .fillMaxWidth(),
         ) {
             Text(
-                text = speech.title,
+                text = project.title,
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Bold,
                 color = DarkBlue,
             )
             Text(
-                text = "Target: ${speech.target}",
-                fontSize = 16.sp,
+                text = "Target: ${project.targetAge} | Domain: ${project.domain}",
+                fontSize = 14.sp,
                 color = Color.Gray,
                 modifier = Modifier.padding(top = 4.dp),
             )
@@ -128,13 +150,13 @@ fun SpeechCard(speech: SpeechSession) {
                     ) {
                         Box(
                             modifier = Modifier
-                                .fillMaxWidth(speech.grade / 10f)
+                                .fillMaxWidth(project.averageGrade / 10f)
                                 .height(8.dp)
                                 .background(TempoBlue, RoundedCornerShape(4.dp)),
                         )
                     }
                     Text(
-                        text = "Grade: ${speech.grade}/10",
+                        text = "Grade: ${project.averageGrade}/10",
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Medium,
                         color = DarkBlue,
@@ -150,6 +172,6 @@ fun SpeechCard(speech: SpeechSession) {
 @Composable
 fun MainScreenPreview() {
     Google_HackTheme {
-        MainScreen { }
+        MainScreen(homeViewModel = viewModel(), onAddSpeechClick = {}, onSpeechClick = {})
     }
 }

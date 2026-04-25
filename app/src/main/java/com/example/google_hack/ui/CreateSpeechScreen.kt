@@ -23,12 +23,20 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.google_hack.data.models.Project
+import com.example.google_hack.presentation.home.HomeViewModel
 import com.example.google_hack.ui.theme.DarkBlue
 import com.example.google_hack.ui.theme.Google_HackTheme
+import com.example.google_hack.util.Resource
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CreateSpeechScreen(onBackClick: () -> Unit, onSubmitClick: () -> Unit) {
+fun CreateSpeechScreen(
+    homeViewModel: HomeViewModel,
+    onBackClick: () -> Unit,
+    onSubmitClick: () -> Unit
+) {
     var title by remember { mutableStateOf("") }
     var transcriptText by remember { mutableStateOf("") }
     var selectedFileName by remember { mutableStateOf("") }
@@ -37,6 +45,8 @@ fun CreateSpeechScreen(onBackClick: () -> Unit, onSubmitClick: () -> Unit) {
     var selectedLanguage by remember { mutableStateOf("English") }
     var selectedAge by remember { mutableStateOf("18+") }
     var selectedDomain by remember { mutableStateOf("IT") }
+
+    val createProjectState by homeViewModel.createProjectState.collectAsState()
 
     val languages = listOf("English", "Romanian")
     val ages = listOf("18-", "18+", "30+", "50+", "60+")
@@ -163,15 +173,41 @@ fun CreateSpeechScreen(onBackClick: () -> Unit, onSubmitClick: () -> Unit) {
             TempoDropdown(label = "Target Audience Age", options = ages, selectedOption = selectedAge) { selectedAge = it }
             TempoDropdown(label = "Domain", options = domains, selectedOption = selectedDomain) { selectedDomain = it }
 
+            if (createProjectState is Resource.Error) {
+                Text(
+                    text = (createProjectState as Resource.Error).message,
+                    color = Color.Red,
+                    fontSize = 12.sp
+                )
+            }
+
             Button(
-                onClick = onSubmitClick,
+                onClick = {
+                    if (title.isNotBlank()) {
+                        val project = Project(
+                            title = title,
+                            language = selectedLanguage,
+                            targetAge = selectedAge,
+                            domain = selectedDomain,
+                            transcriptText = transcriptText
+                        )
+                        homeViewModel.createProject(project) {
+                            onSubmitClick()
+                        }
+                    }
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
                 shape = RoundedCornerShape(12.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = DarkBlue),
+                enabled = createProjectState !is Resource.Loading
             ) {
-                Text("Submit", fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                if (createProjectState is Resource.Loading) {
+                    CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))
+                } else {
+                    Text("Submit", fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                }
             }
         }
     }
@@ -230,6 +266,6 @@ fun TempoDropdown(
 @Composable
 fun CreateSpeechScreenPreview() {
     Google_HackTheme {
-        CreateSpeechScreen(onBackClick = {}, onSubmitClick = {})
+        CreateSpeechScreen(homeViewModel = viewModel(), onBackClick = {}, onSubmitClick = {})
     }
 }

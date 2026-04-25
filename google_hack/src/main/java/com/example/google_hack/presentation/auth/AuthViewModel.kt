@@ -14,7 +14,6 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
-import com.example.google_hack.R
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -48,12 +47,11 @@ class AuthViewModel : ViewModel() {
             try {
                 val credentialManager = CredentialManager.create(context)
                 
-                // Fetch the Web Client ID from automatically generated resources
-                // This ensures it always matches your current google-services.json
-                val webClientId = context.getString(R.string.default_web_client_id)
+                // Use the provided Web Client ID directly for verification
+                val webClientId = "790058569573-0p57lj82l0o27k245jrqb6dv209m6046.apps.googleusercontent.com"
 
                 val googleIdOption = GetGoogleIdOption.Builder()
-                    .setFilterByAuthorizedAccounts(filterByAuthorizedAccounts = false)
+                    .setFilterByAuthorizedAccounts(false)
                     .setServerClientId(webClientId)
                     .setAutoSelectEnabled(false)
                     .build()
@@ -114,7 +112,7 @@ class AuthViewModel : ViewModel() {
             "uid" to user.uid,
             "name" to (user.displayName ?: ""),
             "email" to (user.email ?: ""),
-            "createdAt" to com.google.firebase.Timestamp.now(),
+            "createdAt" to com.google.firebase.Timestamp.now()
         )
 
         try {

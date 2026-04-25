@@ -16,6 +16,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.wear.compose.foundation.lazy.TransformingLazyColumn
 import androidx.wear.compose.foundation.lazy.rememberTransformingLazyColumnState
 import androidx.wear.compose.material3.*
@@ -26,6 +27,9 @@ import com.example.google_hack.data.GestureProcessor
 import com.example.google_hack.data.HeartRateManager
 import com.example.google_hack.data.MicManager
 import com.example.google_hack.data.TinyMLDataProcessor
+import com.example.google_hack.presentation.auth.AuthScreen
+import com.example.google_hack.presentation.auth.AuthState
+import com.example.google_hack.presentation.auth.AuthViewModel
 import com.example.google_hack.presentation.theme.Google_HackTheme
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
@@ -47,14 +51,32 @@ class MainActivity : ComponentActivity() {
         sensorManager = CustomSensorManager(this)
 
         setContent {
-            WearApp(
-                heartRateManager = heartRateManager,
-                micManager = micManager,
-                sensorManager = sensorManager,
-                tinyMLProcessor = tinyMLProcessor,
-                initialGesture = lastGesture,
-                onGestureDetected = { lastGesture = it }
-            )
+            Google_HackTheme {
+                val authViewModel: AuthViewModel = viewModel()
+                val authState by authViewModel.authState.collectAsState()
+
+                when (authState) {
+                    is AuthState.Authenticated -> {
+                        WearApp(
+                            heartRateManager = heartRateManager,
+                            micManager = micManager,
+                            sensorManager = sensorManager,
+                            tinyMLProcessor = tinyMLProcessor,
+                            initialGesture = lastGesture,
+                            onGestureDetected = { lastGesture = it },
+                            onSignOut = { authViewModel.signOut(this@MainActivity) }
+                        )
+                    }
+                    else -> {
+                        AuthScreen(
+                            viewModel = authViewModel,
+                            onSuccess = {
+                                // AuthState update will trigger recomposition
+                            }
+                        )
+                    }
+                }
+            }
         }
     }
 
@@ -83,7 +105,8 @@ fun WearApp(
     sensorManager: CustomSensorManager,
     tinyMLProcessor: TinyMLDataProcessor,
     initialGesture: String,
-    onGestureDetected: (String) -> Unit
+    onGestureDetected: (String) -> Unit,
+    onSignOut: () -> Unit
 ) {
     val context = androidx.compose.ui.platform.LocalContext.current
     var heartRate by remember { mutableStateOf(0.0) }
@@ -171,148 +194,155 @@ fun WearApp(
         }
     }
 
-    Google_HackTheme {
-        AppScaffold {
-            val listState = rememberTransformingLazyColumnState()
-            val transformationSpec = rememberTransformationSpec()
-            ScreenScaffold(
-                scrollState = listState
-            ) { contentPadding ->
-                TransformingLazyColumn(contentPadding = contentPadding, state = listState) {
-                    item {
-                        ListHeader(
-                            modifier = Modifier.fillMaxWidth().transformedHeight(this, transformationSpec),
-                            transformation = SurfaceTransformation(transformationSpec),
-                        ) {
-                            Text(text = "Real-time Data")
-                        }
+    AppScaffold {
+        val listState = rememberTransformingLazyColumnState()
+        val transformationSpec = rememberTransformationSpec()
+        ScreenScaffold(
+            scrollState = listState
+        ) { contentPadding ->
+            TransformingLazyColumn(contentPadding = contentPadding, state = listState) {
+                item {
+                    ListHeader(
+                        modifier = Modifier.fillMaxWidth().transformedHeight(this, transformationSpec),
+                        transformation = SurfaceTransformation(transformationSpec),
+                    ) {
+                        Text(text = "Real-time Data")
                     }
-                    if (!bodySensorsGranted || !recordAudioGranted) {
-                        item {
-                            Button(
-                                onClick = { 
-                                    Log.d("MainActivity", "Grant Permissions button clicked")
-                                    permissionLauncher.launch(
-                                        arrayOf(
-                                            Manifest.permission.BODY_SENSORS,
-                                            Manifest.permission.RECORD_AUDIO
-                                        )
+                }
+                if (!bodySensorsGranted || !recordAudioGranted) {
+                    item {
+                        Button(
+                            onClick = { 
+                                Log.d("MainActivity", "Grant Permissions button clicked")
+                                permissionLauncher.launch(
+                                    arrayOf(
+                                        Manifest.permission.BODY_SENSORS,
+                                        Manifest.permission.RECORD_AUDIO
                                     )
-                                },
-                                modifier = Modifier.fillMaxWidth().transformedHeight(this, transformationSpec),
-                                transformation = SurfaceTransformation(transformationSpec),
-                            ) {
-                                Text("Grant Missing Permissions")
-                            }
-                        }
-                    }
-                    
-                    item {
-                        Button(
-                            onClick = { isStreaming = !isStreaming },
-                            modifier = Modifier.fillMaxWidth().transformedHeight(this, transformationSpec),
-                            transformation = SurfaceTransformation(transformationSpec),
-                            colors = if (isStreaming) ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.tertiary) else ButtonDefaults.buttonColors()
-                        ) {
-                            Text(if (isStreaming) "Streaming CSV..." else "Start Streaming CSV")
-                        }
-                    }
-
-                    item {
-                        Button(
-                            onClick = { currentLabel = if (currentLabel == 0) 1 else 0 },
+                                )
+                            },
                             modifier = Modifier.fillMaxWidth().transformedHeight(this, transformationSpec),
                             transformation = SurfaceTransformation(transformationSpec),
                         ) {
-                            Text(if (currentLabel == 0) "Label 0: Idle" else "Label 1: Action")
+                            Text("Grant Missing Permissions")
                         }
                     }
+                }
+                
+                item {
+                    Button(
+                        onClick = { isStreaming = !isStreaming },
+                        modifier = Modifier.fillMaxWidth().transformedHeight(this, transformationSpec),
+                        transformation = SurfaceTransformation(transformationSpec),
+                        colors = if (isStreaming) ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.tertiary) else ButtonDefaults.buttonColors()
+                    ) {
+                        Text(if (isStreaming) "Streaming CSV..." else "Start Streaming CSV")
+                    }
+                }
 
-                    item {
-                        Card(
-                            onClick = {},
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .transformedHeight(this, transformationSpec)
-                                .padding(vertical = 4.dp),
-                            transformation = SurfaceTransformation(transformationSpec),
-                        ) {
-                            Column {
-                                Text(text = "Mic RMS (Lab 6)", style = MaterialTheme.typography.labelSmall)
-                                Text(text = "%.2f".format(micRMS), style = MaterialTheme.typography.bodyMedium)
-                            }
-                        }
+                item {
+                    Button(
+                        onClick = { currentLabel = if (currentLabel == 0) 1 else 0 },
+                        modifier = Modifier.fillMaxWidth().transformedHeight(this, transformationSpec),
+                        transformation = SurfaceTransformation(transformationSpec),
+                    ) {
+                        Text(if (currentLabel == 0) "Label 0: Idle" else "Label 1: Action")
                     }
+                }
 
-                    item {
-                        Card(
-                            onClick = {},
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .transformedHeight(this, transformationSpec)
-                                .padding(vertical = 4.dp),
-                            transformation = SurfaceTransformation(transformationSpec),
-                        ) {
-                            Column {
-                                Text(text = "Heart Rate", style = MaterialTheme.typography.labelSmall)
-                                Text(
-                                    text = if (bodySensorsGranted) "${heartRate.toInt()} BPM" else "Permission Denied",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = if (bodySensorsGranted) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.error
-                                )
-                            }
+                item {
+                    Card(
+                        onClick = {},
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .transformedHeight(this, transformationSpec)
+                            .padding(vertical = 4.dp),
+                        transformation = SurfaceTransformation(transformationSpec),
+                    ) {
+                        Column {
+                            Text(text = "Mic RMS (Lab 6)", style = MaterialTheme.typography.labelSmall)
+                            Text(text = "%.2f".format(micRMS), style = MaterialTheme.typography.bodyMedium)
                         }
                     }
-                    item {
-                        Card(
-                            onClick = {},
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .transformedHeight(this, transformationSpec)
-                                .padding(vertical = 4.dp),
-                            transformation = SurfaceTransformation(transformationSpec),
-                        ) {
-                            Column {
-                                Text(text = "Mic Amplitude", style = MaterialTheme.typography.labelSmall)
-                                Text(
-                                    text = if (recordAudioGranted) "$micAmplitude" else "Permission Denied",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = if (recordAudioGranted) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.error
-                                )
-                            }
+                }
+
+                item {
+                    Card(
+                        onClick = {},
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .transformedHeight(this, transformationSpec)
+                            .padding(vertical = 4.dp),
+                        transformation = SurfaceTransformation(transformationSpec),
+                    ) {
+                        Column {
+                            Text(text = "Heart Rate", style = MaterialTheme.typography.labelSmall)
+                            Text(
+                                text = if (bodySensorsGranted) "${heartRate.toInt()} BPM" else "Permission Denied",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = if (bodySensorsGranted) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.error
+                            )
                         }
                     }
-                    item {
-                        Card(
-                            onClick = {},
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .transformedHeight(this, transformationSpec)
-                                .padding(vertical = 4.dp),
-                            transformation = SurfaceTransformation(transformationSpec),
-                        ) {
-                            Column {
-                                Text(text = "Last Gesture", style = MaterialTheme.typography.labelSmall)
-                                Text(text = lastGesture, style = MaterialTheme.typography.bodyMedium)
-                            }
+                }
+                item {
+                    Card(
+                        onClick = {},
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .transformedHeight(this, transformationSpec)
+                            .padding(vertical = 4.dp),
+                        transformation = SurfaceTransformation(transformationSpec),
+                    ) {
+                        Column {
+                            Text(text = "Mic Amplitude", style = MaterialTheme.typography.labelSmall)
+                            Text(
+                                text = if (recordAudioGranted) "$micAmplitude" else "Permission Denied",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = if (recordAudioGranted) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.error
+                            )
                         }
                     }
-                    item {
-                        Card(
-                            onClick = {},
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .transformedHeight(this, transformationSpec)
-                                .padding(vertical = 4.dp),
-                            transformation = SurfaceTransformation(transformationSpec),
-                        ) {
-                            Column {
-                                Text(text = "Accelerometer", style = MaterialTheme.typography.labelSmall)
-                                Text(text = "X: %.2f".format(accelData[0]), style = MaterialTheme.typography.bodyMedium)
-                                Text(text = "Y: %.2f".format(accelData[1]), style = MaterialTheme.typography.bodyMedium)
-                                Text(text = "Z: %.2f".format(accelData[2]), style = MaterialTheme.typography.bodyMedium)
-                            }
+                }
+                item {
+                    Card(
+                        onClick = {},
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .transformedHeight(this, transformationSpec)
+                            .padding(vertical = 4.dp),
+                        transformation = SurfaceTransformation(transformationSpec),
+                    ) {
+                        Column {
+                            Text(text = "Last Gesture", style = MaterialTheme.typography.labelSmall)
+                            Text(text = lastGesture, style = MaterialTheme.typography.bodyMedium)
                         }
+                    }
+                }
+                item {
+                    Card(
+                        onClick = {},
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .transformedHeight(this, transformationSpec)
+                            .padding(vertical = 4.dp),
+                        transformation = SurfaceTransformation(transformationSpec),
+                    ) {
+                        Column {
+                            Text(text = "Accelerometer", style = MaterialTheme.typography.labelSmall)
+                            Text(text = "X: %.2f".format(accelData[0]), style = MaterialTheme.typography.bodyMedium)
+                            Text(text = "Y: %.2f".format(accelData[1]), style = MaterialTheme.typography.bodyMedium)
+                            Text(text = "Z: %.2f".format(accelData[2]), style = MaterialTheme.typography.bodyMedium)
+                        }
+                    }
+                }
+                item {
+                    Button(
+                        onClick = onSignOut,
+                        modifier = Modifier.fillMaxWidth().transformedHeight(this, transformationSpec),
+                        transformation = SurfaceTransformation(transformationSpec),
+                    ) {
+                        Text("Sign Out")
                     }
                 }
             }

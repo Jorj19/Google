@@ -13,6 +13,9 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.google_hack.presentation.auth.AuthScreen
 import com.example.google_hack.presentation.auth.AuthState
 import com.example.google_hack.presentation.auth.AuthViewModel
+import com.example.google_hack.presentation.home.HomeViewModel
+import com.example.google_hack.data.models.Project
+import com.example.google_hack.ui.PracticeScreen
 import com.example.google_hack.ui.theme.Google_HackTheme
 import kotlinx.coroutines.delay
 
@@ -20,7 +23,8 @@ enum class Screen {
     Welcome,
     Auth,
     Main,
-    CreateSpeech
+    CreateSpeech,
+    Practice
 }
 
 class MainActivity : ComponentActivity() {
@@ -30,9 +34,11 @@ class MainActivity : ComponentActivity() {
         setContent {
             Google_HackTheme {
                 val authViewModel: AuthViewModel = viewModel()
+                val homeViewModel: HomeViewModel = viewModel()
                 val authState by authViewModel.authState.collectAsState()
 
                 var currentScreen by remember { mutableStateOf(value = Screen.Welcome) }
+                var selectedProject by remember { mutableStateOf<Project?>(null) }
                 var nextScreen by remember { mutableStateOf<Screen?>(value = null) }
                 var isTransitioning by remember { mutableStateOf(value = false) }
 
@@ -58,7 +64,7 @@ class MainActivity : ComponentActivity() {
                     when (currentScreen) {
                         Screen.Welcome -> {
                             WelcomeScreen {
-                                nextScreen = Screen.Auth
+                                nextScreen = Screen.Main
                             }
                         }
                         Screen.Auth -> {
@@ -70,15 +76,33 @@ class MainActivity : ComponentActivity() {
                             )
                         }
                         Screen.Main -> {
-                            MainScreen {
-                                currentScreen = Screen.CreateSpeech
-                            }
+                            MainScreen(
+                                homeViewModel = homeViewModel,
+                                onAddSpeechClick = {
+                                    currentScreen = Screen.CreateSpeech
+                                },
+                                onSpeechClick = { project ->
+                                    selectedProject = project
+                                    currentScreen = Screen.Practice
+                                }
+                            )
                         }
                         Screen.CreateSpeech -> {
                             CreateSpeechScreen(
+                                homeViewModel = homeViewModel,
                                 onBackClick = { currentScreen = Screen.Main },
-                                onSubmitClick = { currentScreen = Screen.Main },
+                                onSubmitClick = { 
+                                    currentScreen = Screen.Main 
+                                },
                             )
+                        }
+                        Screen.Practice -> {
+                            selectedProject?.let { project ->
+                                PracticeScreen(
+                                    project = project,
+                                    onBackClick = { currentScreen = Screen.Main }
+                                )
+                            }
                         }
                     }
                 }

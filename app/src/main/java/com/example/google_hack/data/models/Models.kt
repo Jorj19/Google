@@ -35,3 +35,16 @@ data class SessionSummary(
     val fillerWordCount: Int = 0,
     val aiFinalSummary: String = ""
 )
+
+data class Project(
+    val id: String = "",
+    val title: String = "",
+    val language: String = "",
+    val targetAge: String = "",
+    val domain: String = "",
+    val transcriptText: String = "",
+    val transcriptUrl: String = "",
+    val audioUrl: String = "",
+    val createdAt: Timestamp = Timestamp.now(),
+    val averageGrade: Float = 0f
+)
